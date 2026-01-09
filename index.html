@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRAC dApp Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    .status {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .status.checking {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px 8px 8px 0;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .test-section {
+      margin: 24px 0;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #007bff;
+    }
+    .test-section h3 {
+      margin-top: 0;
+      color: #007bff;
+    }
+    pre {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .json-key {
+      color: #e06c75;
+    }
+    .json-string {
+      color: #98c379;
+    }
+    .json-number {
+      color: #d19a66;
+    }
+    .test-result {
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 TRAC Network dApp Test</h1>
+
+    <div id="providerStatus" class="status checking">
+      ⏳ Checking for window.tracnetwork...
+    </div>
+
+    <!-- Test 1: Request Account (WITH APPROVAL) -->
+    <div class="test-section">
+      <h3>Test 1: Request Account (WITH APPROVAL)</h3>
+      <p>Request TRAC account connection - will show approval modal</p>
+      <button id="btnRequestAccount" onclick="testRequestAccount()" disabled>
+        Request Account
+      </button>
+      <div id="resultRequestAccount" class="test-result"></div>
+    </div>
+
+    <!-- Test 2: Get Address (NO APPROVAL) -->
+    <div class="test-section">
+      <h3>Test 2: Get TRAC Address (NO APPROVAL)</h3>
+      <p>Get TRAC address directly without approval</p>
+      <button id="btnGetAddress" onclick="testGetAddress()" disabled>
+        Get Address
+      </button>
+      <div id="resultGetAddress" class="test-result"></div>
+    </div>
+
+    <!-- Test 3: Get Balance -->
+    <div class="test-section">
+      <h3>Test 3: Get Balance (NO APPROVAL)</h3>
+      <p>Fetch TRAC balance for an address</p>
+      <button id="btnGetBalance" onclick="testGetBalance()" disabled>
+        Get Balance
+      </button>
+      <div id="resultGetBalance" class="test-result"></div>
+    </div>
+
+    <!-- Test 4: Get Public Key -->
+    <div class="test-section">
+      <h3>Test 4: Get Public Key (NO APPROVAL)</h3>
+      <p>Get TRAC public key for active account</p>
+      <button id="btnGetPublicKey" onclick="testGetPublicKey()" disabled>
+        Get Public Key
+      </button>
+      <div id="resultGetPublicKey" class="test-result"></div>
+    </div>
+
+    <!-- Test 5: Get Network -->
+    <div class="test-section">
+      <h3>Test 5: Get Network (NO APPROVAL)</h3>
+      <p>Get current network (mainnet/testnet)</p>
+      <button id="btnGetNetwork" onclick="testGetNetwork()" disabled>
+        Get Network
+      </button>
+      <div id="resultGetNetwork" class="test-result"></div>
+    </div>
+
+    <!-- Test 6: Switch Network -->
+    <div class="test-section">
+      <h3>Test 6: Switch Network (WITH APPROVAL)</h3>
+      <p>Switch between mainnet and testnet - will show approval modal</p>
+      <button id="btnSwitchToTestnet" onclick="testSwitchNetwork('testnet')" disabled>
+        Switch to Testnet
+      </button>
+      <button id="btnSwitchToMainnet" onclick="testSwitchNetwork('livenet')" disabled>
+        Switch to Mainnet
+      </button>
+      <div id="resultSwitchNetwork" class="test-result"></div>
+    </div>
+
+    <!-- Test 7: Sign Message -->
+    <div class="test-section">
+      <h3>Test 7: Sign Message (WITH APPROVAL)</h3>
+      <p>Sign a message with TRAC private key - will show approval modal</p>
+      <input type="text" id="messageInput" placeholder="Enter message to sign" style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        background: white;
+        color: black;
+      " value="Hello TRAC Network!" />
+      <button id="btnSignMessage" onclick="testSignMessage()" disabled>
+        Sign Message
+      </button>
+      <div id="resultSignMessage" class="test-result"></div>
+    </div>
+
+    <!-- Test 8: Send TNK -->
+    <div class="test-section">
+      <h3>Test 8: Send TNK (WITH APPROVAL)</h3>
+      <p>Send TRAC tokens to an address - will show approval modal</p>
+      <input type="text" id="recipientInput" placeholder="Recipient TRAC address" style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        background: white;
+        color: black;
+      " />
+      <input type="text" id="amountInput" placeholder="Amount (TNK)" style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        background: white;
+        color: black;
+      " value="0.001" />
+      <button id="btnSendTNK" onclick="testSendTNK()" disabled>
+        Send TNK
+      </button>
+      <div id="resultSendTNK" class="test-result"></div>
+    </div>
+
+    <!-- Test 9: Build Transaction (No Broadcast) -->
+    <div class="test-section">
+      <h3>Test 9: Build TRAC Transaction (NO BROADCAST)</h3>
+      <p>Build transaction without broadcasting - useful for reviewing before sending</p>
+      <input type="text" id="buildRecipientInput" placeholder="Recipient TRAC address" style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        background: white;
+        color: black;
+      " />
+      <input type="text" id="buildAmountInput" placeholder="Amount (TNK)" style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        background: white;
+        color: black;
+      " value="0.001" />
+      <button id="btnBuildTx" onclick="testBuildTracTx()" disabled>
+        Build Transaction
+      </button>
+      <div id="resultBuildTx" class="test-result"></div>
+    </div>
+
+    <!-- Test 10: Sign TRAC Transaction -->
+    <div class="test-section">
+      <h3>10. Sign TRAC Transaction</h3>
+      <p style="color: #aaa; font-size: 14px; margin-bottom: 10px;">
+        Sign pre-built transaction data. First build a transaction using Test 9, then use the txData to sign it.
+      </p>
+      <button id="btnSignTx" onclick="testSignTracTx()" disabled>
+        Sign Transaction
+      </button>
+      <div id="resultSignTx" class="test-result"></div>
+    </div>
+
+    <!-- Test 11: Push TRAC Transaction -->
+    <div class="test-section">
+      <h3>11. Push TRAC Transaction</h3>
+      <p style="color: #aaa; font-size: 14px; margin-bottom: 10px;">
+        Broadcast signed transaction payload. First sign a transaction using Test 10, then push the payload.
+      </p>
+      <button id="btnPushTx" onclick="testPushTracTx()" disabled>
+        Push Transaction
+      </button>
+      <div id="resultPushTx" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>📋 Test Log</h3>
+      <pre id="logOutput">Waiting for tests...\n</pre>
+    </div>
+  </div>
+
+  <script>
+    // Utility functions
+    function log(message, data = null) {
+      const timestamp = new Date().toLocaleTimeString();
+      const logOutput = document.getElementById('logOutput');
+      let logText = `[${timestamp}] ${message}`;
+
+      if (data !== null) {
+        logText += '\n' + JSON.stringify(data, null, 2);
+      }
+
+      logOutput.textContent += logText + '\n\n';
+      logOutput.scrollTop = logOutput.scrollHeight;
+    }
+
+    function showResult(elementId, success, data) {
+      const element = document.getElementById(elementId);
+      if (success) {
+        // Hiển thị trực tiếp data, không JSON.stringify nếu là string/number
+        const displayValue = typeof data === 'string' || typeof data === 'number'
+          ? data
+          : JSON.stringify(data, null, 2);
+
+        element.innerHTML = `
+          <div class="status success">
+            ✅ Success
+          </div>
+          <pre>${displayValue}</pre>
+        `;
+      } else {
+        element.innerHTML = `
+          <div class="status error">
+            ❌ Error: ${data.message || 'Unknown error'}
+          </div>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+      }
+    }
+
+    // Check for window.tracnetwork provider
+    function checkProvider() {
+      const statusDiv = document.getElementById('providerStatus');
+      const btnRequestAccount = document.getElementById('btnRequestAccount');
+      const btnGetAddress = document.getElementById('btnGetAddress');
+      const btnGetBalance = document.getElementById('btnGetBalance');
+      const btnGetPublicKey = document.getElementById('btnGetPublicKey');
+      const btnGetNetwork = document.getElementById('btnGetNetwork');
+      const btnSwitchToTestnet = document.getElementById('btnSwitchToTestnet');
+      const btnSwitchToMainnet = document.getElementById('btnSwitchToMainnet');
+      const btnSignMessage = document.getElementById('btnSignMessage');
+      const btnSendTNK = document.getElementById('btnSendTNK');
+
+      if (typeof window.tracnetwork !== 'undefined') {
+        statusDiv.className = 'status success';
+        statusDiv.textContent = '✅ window.tracnetwork detected!';
+        btnRequestAccount.disabled = false;
+        btnGetAddress.disabled = false;
+        btnGetBalance.disabled = false;
+        btnGetPublicKey.disabled = false;
+        btnGetNetwork.disabled = false;
+        btnSwitchToTestnet.disabled = false;
+        btnSwitchToMainnet.disabled = false;
+        btnSignMessage.disabled = false;
+        btnSendTNK.disabled = false;
+        document.getElementById('btnBuildTx').disabled = false;
+        document.getElementById('btnSignTx').disabled = false;
+        document.getElementById('btnPushTx').disabled = false;
+        log('✅ TRAC provider detected', window.tracnetwork);
+      } else {
+        statusDiv.className = 'status error';
+        statusDiv.textContent = '❌ window.tracnetwork not found. Make sure you\'re running this in the wallet app.';
+        log('❌ TRAC provider NOT found');
+      }
+    }
+
+    // Test 1: Request TRAC Account (WITH APPROVAL)
+    async function testRequestAccount() {
+      log('🔐 Test 1: Requesting TRAC account (will show approval modal)...');
+
+      try {
+        const result = await window.tracnetwork.requestAccount();
+        log('✅ Result:', result);
+        showResult('resultRequestAccount', true, result);
+      } catch (error) {
+        log('❌ Error:', error.message);
+        showResult('resultRequestAccount', false, error.message);
+      }
+    }
+
+    // Test 2: Get TRAC Address (NO APPROVAL)
+    async function testGetAddress() {
+      log('🔍 Test 2: Requesting TRAC address (no approval needed)...');
+
+      try {
+        const result = await window.tracnetwork.getAddress();
+        log('✅ Result:', result);
+        showResult('resultGetAddress', true, result);
+      } catch (error) {
+        log('❌ Error:', error.message);
+        showResult('resultGetAddress', false, error.message);
+      }
+    }
+
+    // Test 3: Get TRAC Balance (NO APPROVAL)
+    async function testGetBalance() {
+      log('💰 Test 3: Fetching TRAC balance (no approval needed)...');
+
+      try {
+        const result = await window.tracnetwork.getBalance();
+        log('✅ Result:', result);
+        showResult('resultGetBalance', true, result);
+      } catch (error) {
+        log('❌ Error:', error.message);
+        showResult('resultGetBalance', false, error.message);
+      }
+    }
+
+    // Test 4: Get TRAC Public Key (NO APPROVAL)
+    async function testGetPublicKey() {
+      log('🔑 Test 4: Fetching TRAC public key (no approval needed)...');
+
+      try {
+        const result = await window.tracnetwork.getPublicKey();
+        log('✅ Result:', result);
+        showResult('resultGetPublicKey', true, result);
+      } catch (error) {
+        log('❌ Error:', error.message);
+        showResult('resultGetPublicKey', false, error.message);
+      }
+    }
+
+    // Test 5: Get TRAC Network (NO APPROVAL)
+    async function testGetNetwork() {
+      log('🌐 Test 5: Fetching current network (no approval needed)...');
+
+      try {
+        const result = await window.tracnetwork.getNetwork();
+        log('✅ Result:', result);
+        showResult('resultGetNetwork', true, result);
+      } catch (error) {
+        log('❌ Error:', error.message);
+        showResult('resultGetNetwork', false, error.message);
+      }
+    }
+
+    // Test 6: Switch Network (NO APPROVAL)
+    async function testSwitchNetwork(targetNetwork) {
+      log(`🔄 Test 6: Switching to ${targetNetwork}...`);
+
+      try {
+        const result = await window.tracnetwork.switchNetwork(targetNetwork);
+        log('✅ Result:', result);
+        showResult('resultSwitchNetwork', true, result);
+      } catch (error) {
+        log('❌ Error:', error.message);
+        showResult('resultSwitchNetwork', false, error.message);
+      }
+    }
+
+    // Test 7: Sign Message (WITH APPROVAL)
+    async function testSignMessage() {
+      log('✍️ Test 7: Signing TRAC message (will show approval modal)...');
+
+      try {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value;
+
+        if (!message) {
+          showResult('resultSignMessage', false, 'Please enter a message to sign');
+          return;
+        }
+
+        const result = await window.tracnetwork.signMessage(message);
+        log('✅ Result:', result);
+        showResult('resultSignMessage', true, result);
+      } catch (error) {
+        log('❌ Error:', error.message);
+        showResult('resultSignMessage', false, error.message);
+      }
+    }
+
+    // Test 8: Send TNK (WITH APPROVAL)
+    async function testSendTNK() {
+      log('💸 Test 8: Sending TRAC tokens (will show approval modal)...');
+
+      try {
+        const recipientInput = document.getElementById('recipientInput');
+        const amountInput = document.getElementById('amountInput');
+
+        const to = recipientInput.value;
+        const amount = amountInput.value;
+
+        if (!to) {
+          showResult('resultSendTNK', false, 'Please enter a recipient address');
+          return;
+        }
+
+        if (!amount || parseFloat(amount) <= 0) {
+          showResult('resultSendTNK', false, 'Please enter a valid amount');
+          return;
+        }
+
+        const result = await window.tracnetwork.sendTNK(null, to, amount);
+        log('✅ Result:', result);
+        showResult('resultSendTNK', true, result);
+      } catch (error) {
+        log('❌ Error:', error.message);
+        showResult('resultSendTNK', false, error.message);
+      }
+    }
+
+    // Test 9: Build Transaction (NO BROADCAST)
+    async function testBuildTracTx() {
+      log('🔨 Test 9: Building TRAC transaction (no broadcast)...');
+
+      try {
+        const recipientInput = document.getElementById('buildRecipientInput');
+        const amountInput = document.getElementById('buildAmountInput');
+
+        const to = recipientInput.value;
+        const amount = amountInput.value;
+
+        if (!to) {
+          showResult('resultBuildTx', false, {
+            error: 'Please enter a recipient address'
+          });
+          return;
+        }
+
+        if (!amount || parseFloat(amount) <= 0) {
+          showResult('resultBuildTx', false, {
+            error: 'Please enter a valid amount'
+          });
+          return;
+        }
+
+        log('🔨 Building transaction:', {to, amount});
+
+        // Build transaction without broadcasting
+        const txData = await window.tracnetwork.buildTracTx({
+          to,
+          amount
+        });
+
+        log('✅ Transaction built successfully', txData);
+
+        // Validate result
+        if (txData && txData.chainId && txData.amountHex) {
+          showResult('resultBuildTx', true, {
+            chainId: txData.chainId,
+            amountHex: txData.amountHex,
+            validityHex: txData.validityHex ? txData.validityHex.substring(0, 20) + '...' : null,
+            hash: txData.hash ? txData.hash.substring(0, 20) + '...' : null,
+            note: 'Transaction data ready for signing/broadcasting',
+            hasBufferFields: txData._bufferFields ? 'Yes: ' + txData._bufferFields.join(', ') : 'No'
+          });
+        } else {
+          showResult('resultBuildTx', false, {
+            result: txData,
+            error: 'Invalid transaction data'
+          });
+        }
+      } catch (error) {
+        log('❌ Error building transaction', {error: error.message});
+        showResult('resultBuildTx', false, {
+          error: error.message,
+          note: 'Failed to build transaction'
+        });
+      }
+    }
+
+    // Store transaction data and payload globally for testing flow
+    let lastBuiltTxData = null;
+    let lastSignedPayload = null;
+
+    /**
+     * Test 10: Sign TRAC Transaction
+     */
+    async function testSignTracTx() {
+      log('🔏 Test 10: Signing TRAC transaction...');
+
+      try {
+        // Check if we have transaction data from previous build
+        if (!lastBuiltTxData) {
+          showResult('resultSignTx', false, {
+            error: 'No transaction data available',
+            note: 'Please build a transaction first using Test 9'
+          });
+          log('⚠️ No transaction data. Please run Test 9 first.');
+          return;
+        }
+
+        log('🔏 Signing transaction data:', lastBuiltTxData);
+
+        // Sign the transaction
+        const payload = await window.tracnetwork.signTracTx(lastBuiltTxData);
+
+        log('✅ Transaction signed successfully');
+
+        // Store the signed payload for Test 11
+        lastSignedPayload = payload;
+
+        // Show result
+        if (payload && typeof payload === 'string') {
+          showResult('resultSignTx', true, {
+            payload: payload.substring(0, 50) + '...',
+            payloadLength: payload.length,
+            note: 'Transaction signed. Use Test 11 to broadcast it.'
+          });
+        } else {
+          showResult('resultSignTx', false, {
+            result: payload,
+            error: 'Invalid payload format'
+          });
+        }
+      } catch (error) {
+        log('❌ Error signing transaction', {error: error.message});
+        showResult('resultSignTx', false, {
+          error: error.message,
+          note: 'Failed to sign transaction'
+        });
+      }
+    }
+
+    /**
+     * Test 11: Push TRAC Transaction
+     */
+    async function testPushTracTx() {
+      log('📡 Test 11: Broadcasting TRAC transaction...');
+
+      try {
+        // Check if we have signed payload from previous sign
+        if (!lastSignedPayload) {
+          showResult('resultPushTx', false, {
+            error: 'No signed payload available',
+            note: 'Please sign a transaction first using Test 10'
+          });
+          log('⚠️ No signed payload. Please run Test 10 first.');
+          return;
+        }
+
+        log('📡 Broadcasting transaction payload...');
+
+        // Broadcast the signed transaction
+        const result = await window.tracnetwork.pushTracTx(lastSignedPayload);
+
+        log('✅ Transaction broadcast successfully', result);
+
+        // Validate result
+        if (result && result.txHash) {
+          showResult('resultPushTx', true, {
+            txHash: result.txHash,
+            success: result.success,
+            note: 'Transaction successfully broadcast to the network'
+          });
+
+          // Clear stored data after successful broadcast
+          lastBuiltTxData = null;
+          lastSignedPayload = null;
+        } else {
+          showResult('resultPushTx', false, {
+            result,
+            error: 'Invalid broadcast result'
+          });
+        }
+      } catch (error) {
+        log('❌ Error broadcasting transaction', {error: error.message});
+        showResult('resultPushTx', false, {
+          error: error.message,
+          note: 'Failed to broadcast transaction'
+        });
+      }
+    }
+
+    // Override testBuildTracTx to store txData
+    const originalTestBuildTracTx = testBuildTracTx;
+    testBuildTracTx = async function() {
+      await originalTestBuildTracTx();
+
+      // After successful build, try to extract and store txData from result
+      const resultDiv = document.getElementById('resultBuildTx');
+      if (resultDiv && resultDiv.querySelector('.status.success')) {
+        // Store the transaction data for Test 10
+        const recipientInput = document.getElementById('buildRecipientInput');
+        const amountInput = document.getElementById('buildAmountInput');
+
+        try {
+          const txData = await window.tracnetwork.buildTracTx({
+            to: recipientInput.value,
+            amount: amountInput.value
+          });
+          lastBuiltTxData = txData;
+          log('💾 Transaction data stored for signing');
+        } catch (e) {
+          // Silent fail
+        }
+      }
+    };
+
+    // Initialize when page loads
+    window.addEventListener('load', () => {
+      log('📱 Page loaded');
+
+      // Check immediately
+      checkProvider();
+
+      // Check again after 1 second (in case injection is delayed)
+      setTimeout(() => {
+        if (typeof window.tracnetwork === 'undefined') {
+          checkProvider();
+        }
+      }, 1000);
+    });
+
+    // Listen for provider injection
+    window.addEventListener('tracnetwork#initialized', () => {
+      log('🎉 TRAC provider initialized event received');
+      checkProvider();
+    });
+  </script>
+</body>
+</html>
