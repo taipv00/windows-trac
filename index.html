@@ -213,10 +213,10 @@
       <div id="resultSendTNK" class="test-result"></div>
     </div>
 
-    <!-- Test 9: Build Transaction (No Broadcast) -->
+    <!-- Test 9: Build and Sign Transaction -->
     <div class="test-section">
-      <h3>Test 9: Build TRAC Transaction (NO BROADCAST)</h3>
-      <p>Build transaction without broadcasting - useful for reviewing before sending</p>
+      <h3>Test 9: Build & Sign TRAC Transaction (WITH APPROVAL)</h3>
+      <p>Build and sign transaction - will show approval modal. Transaction is not broadcast automatically.</p>
       <input type="text" id="buildRecipientInput" placeholder="Recipient TRAC address" style="
         width: 100%;
         padding: 10px;
@@ -236,28 +236,16 @@
         color: black;
       " value="0.001" />
       <button id="btnBuildTx" onclick="testBuildTracTx()" disabled>
-        Build Transaction
+        Build & Sign Transaction
       </button>
       <div id="resultBuildTx" class="test-result"></div>
     </div>
 
-    <!-- Test 10: Sign TRAC Transaction -->
+    <!-- Test 10: Push TRAC Transaction -->
     <div class="test-section">
-      <h3>10. Sign TRAC Transaction</h3>
+      <h3>Test 10: Push TRAC Transaction</h3>
       <p style="color: #aaa; font-size: 14px; margin-bottom: 10px;">
-        Sign pre-built transaction data. First build a transaction using Test 9, then use the txData to sign it.
-      </p>
-      <button id="btnSignTx" onclick="testSignTracTx()" disabled>
-        Sign Transaction
-      </button>
-      <div id="resultSignTx" class="test-result"></div>
-    </div>
-
-    <!-- Test 11: Push TRAC Transaction -->
-    <div class="test-section">
-      <h3>11. Push TRAC Transaction</h3>
-      <p style="color: #aaa; font-size: 14px; margin-bottom: 10px;">
-        Broadcast signed transaction payload. First sign a transaction using Test 10, then push the payload.
+        Broadcast signed transaction payload. First build & sign a transaction using Test 9, then push the payload.
       </p>
       <button id="btnPushTx" onclick="testPushTracTx()" disabled>
         Push Transaction
@@ -336,7 +324,6 @@
         btnSignMessage.disabled = false;
         btnSendTNK.disabled = false;
         document.getElementById('btnBuildTx').disabled = false;
-        document.getElementById('btnSignTx').disabled = false;
         document.getElementById('btnPushTx').disabled = false;
         log('✅ TRAC provider detected', window.tracnetwork);
       } else {
@@ -482,9 +469,12 @@
       }
     }
 
-    // Test 9: Build Transaction (NO BROADCAST)
+    // Test 9: Build and Sign Transaction (WITH APPROVAL)
+    // Store signed payload globally for Test 10
+    let lastSignedPayload = null;
+
     async function testBuildTracTx() {
-      log('🔨 Test 9: Building TRAC transaction (no broadcast)...');
+      log('🔨 Test 9: Building and signing TRAC transaction (will show approval modal)...');
 
       try {
         const recipientInput = document.getElementById('buildRecipientInput');
@@ -507,108 +497,58 @@
           return;
         }
 
-        log('🔨 Building transaction:', {to, amount});
+        log('🔨 Building and signing transaction:', {to, amount});
 
-        // Build transaction without broadcasting
-        const txData = await window.tracnetwork.buildTracTx({
+        // Build and sign transaction (will show approval modal)
+        const txPayload = await window.tracnetwork.buildTracTx({
           to,
           amount
         });
 
-        log('✅ Transaction built successfully', txData);
+        log('✅ Transaction built and signed successfully');
+
+        // Store the signed payload for Test 10 (Push)
+        lastSignedPayload = txPayload;
 
         // Validate result
-        if (txData && txData.chainId && txData.amountHex) {
+        if (txPayload && typeof txPayload === 'string') {
           showResult('resultBuildTx', true, {
-            chainId: txData.chainId,
-            amountHex: txData.amountHex,
-            validityHex: txData.validityHex ? txData.validityHex.substring(0, 20) + '...' : null,
-            hash: txData.hash ? txData.hash.substring(0, 20) + '...' : null,
-            note: 'Transaction data ready for signing/broadcasting',
-            hasBufferFields: txData._bufferFields ? 'Yes: ' + txData._bufferFields.join(', ') : 'No'
+            payload: txPayload.substring(0, 50) + '...',
+            payloadLength: txPayload.length,
+            note: 'Transaction signed and ready to broadcast. Use Test 10 to push it.'
           });
+          log('💾 Signed payload stored for broadcasting');
         } else {
           showResult('resultBuildTx', false, {
-            result: txData,
-            error: 'Invalid transaction data'
+            result: txPayload,
+            error: 'Invalid transaction payload'
           });
+          lastSignedPayload = null;
         }
       } catch (error) {
-        log('❌ Error building transaction', {error: error.message});
+        log('❌ Error building/signing transaction', {error: error.message});
         showResult('resultBuildTx', false, {
           error: error.message,
-          note: 'Failed to build transaction'
+          note: 'Failed to build or sign transaction'
         });
-      }
-    }
-
-    // Store transaction data and payload globally for testing flow
-    let lastBuiltTxData = null;
-    let lastSignedPayload = null;
-
-    /**
-     * Test 10: Sign TRAC Transaction
-     */
-    async function testSignTracTx() {
-      log('🔏 Test 10: Signing TRAC transaction...');
-
-      try {
-        // Check if we have transaction data from previous build
-        if (!lastBuiltTxData) {
-          showResult('resultSignTx', false, {
-            error: 'No transaction data available',
-            note: 'Please build a transaction first using Test 9'
-          });
-          log('⚠️ No transaction data. Please run Test 9 first.');
-          return;
-        }
-
-        log('🔏 Signing transaction data:', lastBuiltTxData);
-
-        // Sign the transaction
-        const payload = await window.tracnetwork.signTracTx(lastBuiltTxData);
-
-        log('✅ Transaction signed successfully');
-
-        // Store the signed payload for Test 11
-        lastSignedPayload = payload;
-
-        // Show result
-        if (payload && typeof payload === 'string') {
-          showResult('resultSignTx', true, {
-            payload: payload.substring(0, 50) + '...',
-            payloadLength: payload.length,
-            note: 'Transaction signed. Use Test 11 to broadcast it.'
-          });
-        } else {
-          showResult('resultSignTx', false, {
-            result: payload,
-            error: 'Invalid payload format'
-          });
-        }
-      } catch (error) {
-        log('❌ Error signing transaction', {error: error.message});
-        showResult('resultSignTx', false, {
-          error: error.message,
-          note: 'Failed to sign transaction'
-        });
+        lastSignedPayload = null;
       }
     }
 
     /**
-     * Test 11: Push TRAC Transaction
+     * Test 10: Push TRAC Transaction
      */
     async function testPushTracTx() {
-      log('📡 Test 11: Broadcasting TRAC transaction...');
+      log('📡 Test 10: Broadcasting TRAC transaction...');
 
       try {
-        // Check if we have signed payload from previous sign
+        // Check if we have signed payload from Test 9
         if (!lastSignedPayload) {
           showResult('resultPushTx', false, {
             error: 'No signed payload available',
-            note: 'Please sign a transaction first using Test 10'
+            note: 'Please build & sign a transaction first using Test 9'
           });
-          log('⚠️ No signed payload. Please run Test 10 first.');
+          log('⚠️ No signed payload. Please run Test 9 first.');
           return;
         }
 
@@ -628,7 +568,6 @@
           });
 
           // Clear stored data after successful broadcast
-          lastBuiltTxData = null;
           lastSignedPayload = null;
         } else {
           showResult('resultPushTx', false, {
@@ -644,31 +583,6 @@
         });
       }
     }
-
-    // Override testBuildTracTx to store txData
-    const originalTestBuildTracTx = testBuildTracTx;
-    testBuildTracTx = async function() {
-      await originalTestBuildTracTx();
-
-      // After successful build, try to extract and store txData from result
-      const resultDiv = document.getElementById('resultBuildTx');
-      if (resultDiv && resultDiv.querySelector('.status.success')) {
-        // Store the transaction data for Test 10
-        const recipientInput = document.getElementById('buildRecipientInput');
-        const amountInput = document.getElementById('buildAmountInput');
-
-        try {
-          const txData = await window.tracnetwork.buildTracTx({
-            to: recipientInput.value,
-            amount: amountInput.value
-          });
-          lastBuiltTxData = txData;
-          log('💾 Transaction data stored for signing');
-        } catch (e) {
-          // Silent fail
-        }
-      }
-    };
 
     // Initialize when page loads
     window.addEventListener('load', () => {
